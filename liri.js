@@ -1,24 +1,23 @@
 var dotenv = require("dotenv").config();
 var keys = require("./keys.js");
-var Spotify = require('node-spotify-api')
+var Spotify = require('node-spotify-api');
+var spotify = new Spotify(keys.spotify);
 var axios = require("axios");
 var fs = require("fs");
 
 var command = process.argv[2];
-
+var searchItem = "";
+var nodeArgs = process.argv;
 
 
 if (command === "movie-this") {
     getMoveie();
 } else if (command === "spotify-this-song") {
-    var spotify = new Spotify({
-        id: f9b2fa8ba55c4d15a44d89c68aa7c3e0,
-        secret: cca9d8fee41045dcb64275b037880a0b,
-      });
+    
     getSong();
 } else if (command === "do-what-it-says") {
     doThis();
-} else if (COMMAND === "concert-this") {
+} else if (command === "concert-this") {
     getConcert();
 } else {
     console.log("I have no clue what you just said...");
@@ -40,12 +39,37 @@ function doThis() {
 }
 
 function getMoveie() {
-    var searchItem = "Cinderella";
+    searchItem = "";
+    nodeArgs = process.argv;
+    for (var i = 3; i < nodeArgs.length; i++) {
 
+        if (i > 3 && i < nodeArgs.length) {
+         searchItem = searchItem + "+" + nodeArgs[i];
+        }
+        else {
+          searchItem += nodeArgs[i];
+      
+        }
+      }
+      if (searchItem === "") {
+        searchItem = "Mr. Nobody";
+    } 
     axios.get("http://www.omdbapi.com/?t=" + searchItem + "&y=&plot=short&apikey=trilogy").then(
         function (response) {
-            console.log("The movie's rating is: " + response.data.imdbRating);
+            if (response.data.Response === "True") {
+            console.log("Title: " + response.data.Title);
+            console.log("Release Year: " + response.data.Year);
+            console.log("imbd Rating: " + response.data.imdbRating);
+            console.log(response.data.Ratings[1].Source + ": " + response.data.Ratings[1].Value);
+            console.log("Country of Origin: " + response.data.Country);
+            console.log("Language: " + response.data.Language);
+            console.log("Synopsis: " + response.data.Plot);
+            console.log("Starring Actors: " + response.data.Actors);
+            } else if (response.data.Response === "False"){
+                console.log("You sure you typed that right?");
+            }
         })
+        logCommand("movie this", searchItem);
 }
 
 
@@ -53,18 +77,33 @@ function getMoveie() {
 
 
 function getSong() {
-//     var f9b2fa8ba55c4d15a44d89c68aa7c3e0 = f9b2fa8ba55c4d15a44d89c68aa7c3e0;
-// var cca9d8fee41045dcb64275b037880a0b = cca9d8fee41045dcb64275b037880a0b;
 
 
-    var searchItem = "Something Like This"
-    spotify
-  .request('https://api.spotify.com/v1/tracks/7yCPwWs66K8Ba5lFuU2bcx')
-  .then(function(data) {
-    console.log(data); 
-  })
+    var searchItem = "I Want it That Way"
+    spotify.search({ type: 'track', query: searchItem, limit: 1}, function(err, data) {
+        if (err) {
+          return console.log('Error occurred: ' + err);
+        }
+       
+      console.log(data.tracks[17]); 
+      });
 }
 
 // function getConcert() {
 
-// }
+    // }
+    
+function logCommand(action, y) {
+    var lineBreak = "\n ";
+    var loggableAction = lineBreak + action + " " + y;
+    fs.appendFile("log.txt", loggableAction, function(err) {
+
+    // If the code experiences any errors it will log the error to the console.
+    if (err) {
+      return console.log(err);
+    }
+    // Otherwise, it will print: "movies.txt was updated!"
+    console.log(loggableAction);
+  
+  });
+}
