@@ -8,7 +8,7 @@ Liri is a command line interface that allows you to search your favorite songs m
 * spotify-this-song "song title here"
 * conert-this "artist/band name here"
 * movie-this "movie name here"
-* do-this (for a little surprise)
+* do-what-it-says (for a little surprise)
 
 
 # Video Link:
