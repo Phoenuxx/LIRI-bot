@@ -7,28 +7,30 @@ var axios = require("axios");
 var fs = require("fs");
 var command = process.argv[2];
 var searchItem = "";
-var searchUri = "";
 var nodeArgs = process.argv;
+
+
+
 
 for (var i = 3; i < nodeArgs.length; i++) {
 
     if (i > 3 && i < nodeArgs.length) {
-     searchItem = searchItem + "+" + nodeArgs[i];
+        searchItem = searchItem + "+" + nodeArgs[i];
     }
     else {
-      searchItem += nodeArgs[i];
-  
+        searchItem += nodeArgs[i];
+
     }
-  }
+}
+
 if (command === "movie-this") {
-    getMoveie(searchItem);
+    getMovie(searchItem);
 } else if (command === "spotify-this-song") {
     getSong(searchItem);
 } else if (command === "do-what-it-says") {
-    doThis(searchItem);
+    doThis();
 } else if (command === "concert-this") {
     getConcert(searchItem);
-    console.log("search " + searchItem);
 } else {
     console.log("I have no clue what you just said...");
 }
@@ -38,86 +40,75 @@ if (command === "movie-this") {
 
 
 function doThis() {
-    fs.readFile("random.txt", "utf8", function(error, data) {
-
+    fs.readFile("random.txt", "utf8", function (error, data) {
+        split = data.split(",");
+        command = split[0];
+        searchItem = split[1];
+        getMovie(searchItem);
         // If the code experiences any errors it will log the error to the console.
         if (error) {
-          return console.log(error);
+            return console.log(error);
         }
-        console.log(data);
     });
-    logCommand("did the thing");
 }
 
-function getMoveie(movie) {
+function getMovie(movie) {
 
-    nodeArgs = process.argv;
-
-      if (searchItem === "") {
+    if (searchItem === "") {
         searchItem = "Mr. Nobody";
-    } 
+    }
     axios.get("http://www.omdbapi.com/?t=" + movie + "&y=&plot=short&apikey=trilogy")
-    .then(function (response) {
-        if (response.data.Response === "True") {
-            console.log("Title: " + response.data.Title);
-            console.log("Release Year: " + response.data.Year);
-            console.log("imbd Rating: " + response.data.imdbRating);
-            console.log(response.data.Ratings[1].Source + ": " + response.data.Ratings[1].Value);
-            console.log("Country of Origin: " + response.data.Country);
-            console.log("Language: " + response.data.Language);
-            console.log("Synopsis: " + response.data.Plot);
-            console.log("Starring Actors: " + response.data.Actors);
-        } else if (response.data.Response === "False"){
-            console.log("You sure you typed that right?");
-        }
-    })
-    logCommand("movie this", movie);
+        .then(function (response) {
+            if (response.data.Response === "True") {
+                console.log("Title: " + response.data.Title);
+                console.log("Release Year: " + response.data.Year);
+                console.log("imbd Rating: " + response.data.imdbRating);
+                console.log(response.data.Ratings[1].Source + ": " + response.data.Ratings[1].Value);
+                console.log("Country of Origin: " + response.data.Country);
+                console.log("Language: " + response.data.Language);
+                console.log("Synopsis: " + response.data.Plot);
+                console.log("Starring Actors: " + response.data.Actors);
+            } else if (response.data.Response === "False") {
+                console.log("You sure you typed that right?");
+            }
+        })
 }
 
 function getSong(song) {
-
-    spotify.search({ type: 'track', query: song, limit: 1}, function(err, data) {
+    spotify.search({ type: 'track', query: song, limit: 1 }, function (err, data) {
         if (err) {
-          return console.log('Error occurred: ' + err);
+            return console.log('Error occurred: ' + err);
         }
         console.log(data.tracks.items[0].artists[0].name);
         console.log(data.tracks.items[0].album.name);
-        console.log(data.tracks.items[0].preview_url); 
-        console.log(data.tracks.items[0].name); 
-         searchUri = data.tracks.items[0].uri;
+        console.log(data.tracks.items[0].preview_url);
+        console.log(data.tracks.items[0].name);
     });
-    logCommand("Spotify This Song", song);
 }
 
 function getConcert(artist) {
-// artist = "pegboard nerds"
-var getURL = "https://rest.bandsintown.com/artists/" + artist + "/events?app_id=codingbootcamp";
-console.log(getURL);
+    var getURL = "https://rest.bandsintown.com/artists/" + artist + "/events?app_id=codingbootcamp";
     axios
-    .get(getURL)
-    .then(function(events) {
+        .get(getURL)
+        .then(function (events) {
             var inTown = events.data[0];
-            var date = inTown.datetime;
             var momentDate = moment(inTown.datetime);
-        // return array of events
-        console.log("Their Next Venue is: " + inTown.venue.name);
-        console.log ("In: " + inTown.venue.city + " " + inTown.venue.region)
-        console.log("At: " + momentDate.format("MM/DD/YYYY hh:mm"));
-      })
-      logCommand("concer-this", artist);
-    }
-    
+            // return array of events
+            console.log("Venue Name: " + inTown.venue.name);
+            console.log("City: " + inTown.venue.city + " " + inTown.venue.region)
+            console.log("Date: " + momentDate.format("MM/DD/YYYY hh:mm"));
+        })
+}
+
 function logCommand(action, query) {
     var lineBreak = "\n ";
     var loggableAction = lineBreak + action + " " + query;
-    fs.appendFile("log.txt", loggableAction, function(err) {
-
-    // If the code experiences any errors it will log the error to the console.
-    if (err) {
-      return console.log(err);
-    }
-    // Otherwise, it will print: "movies.txt was updated!"
-    // console.log(loggableAction);
-  
-  });
+    fs.appendFile("log.txt", loggableAction, function (err) {
+        // If the code experiences any errors it will log the error to the console.
+        if (err) {
+            return console.log(err);
+        }
+    });
 }
+
+logCommand(command, searchItem);
